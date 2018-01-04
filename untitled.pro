@@ -30,7 +30,8 @@ SOURCES += \
     simplecurvegraph.cpp \
     rawpeakfilter.cpp \
     rawsmoothfilter.cpp \
-    extracttegparam.cpp
+    extracttegparam.cpp \
+    rotarytest.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -39,7 +40,9 @@ HEADERS += \
     simplecurvegraph.h \
     rawpeakfilter.h \
     rawsmoothfilter.h \
-    extracttegparam.h
+    extracttegparam.h \
+    rotarytest.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    rotarytest.ui

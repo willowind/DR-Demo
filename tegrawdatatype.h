@@ -29,8 +29,6 @@ struct TegParamPoint
     float vvy;
 };
 
-
-
 Q_DECLARE_METATYPE(TEGRawData);
 
 #endif // TEGRAWDATATYPE_H

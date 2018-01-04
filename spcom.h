@@ -48,6 +48,8 @@ private:
 
     QTimer *m_brokenFrameTimer;
     QByteArray m_recvFrameData;
+
+    int m_errTimes;
 };
 
 #endif // SPCOM_H

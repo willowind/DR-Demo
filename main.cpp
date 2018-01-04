@@ -2,6 +2,7 @@
 #include <QApplication>
 
 #include "tegrawdatatype.h"
+#include "rotarytest.h"
 
 int main(int argc, char *argv[])
 {
@@ -10,7 +11,9 @@ int main(int argc, char *argv[])
     qRegisterMetaType<TEGRawData>("TEGRawData");
     qRegisterMetaType<TEGRawData>("TEGRawData&");
 
-    MainWindow w;
+
+    RotaryTest w;
+//    MainWindow w;
     w.show();
 
     return a.exec();

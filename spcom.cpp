@@ -10,6 +10,7 @@ SPCom::SPCom(QObject *parent):QObject(parent)
     QListIterator<QSerialPortInfo> i(spInfoList);
 
     qDebug() << spInfoList.size();
+    m_errTimes = 1;
 
     while(i.hasNext())
     {
@@ -67,12 +68,18 @@ void SPCom::OpenSerialPort(QString &spName)
 
 void SPCom::slotSPDataReadyRead()
 {
-    qDebug("recv data throw SPCom...");
+//    qDebug("recv data throw SPCom...");
 
-    while(m_serialPort->bytesAvailable() > 1)
-    {
-        m_recvFrameData += m_serialPort->readAll();
-    }
+//    while(m_serialPort->bytesAvailable() >= 4)
+//    {
+//        m_recvFrameData += m_serialPort->readAll();
+//    }
+
+    if(m_serialPort->bytesAvailable() < 4)
+        return;
+
+    m_recvFrameData += m_serialPort->readAll();
+    m_serialPort->clear(QSerialPort::Input);
 
     startBrokenFrameTimer();
 }
@@ -99,7 +106,8 @@ void SPCom::slotCollectSPDataOnece()
 
 void SPCom::slotBrokenFrameTimerTimeOut()
 {
-    qDebug() << "................................. recv frame data............................";
+
+//    qDebug() << "................................. recv frame data............................";
 
     stopBrokenFrameTimer();
 
@@ -113,10 +121,13 @@ void SPCom::slotBrokenFrameTimerTimeOut()
 
 
     /////////////////////////////////////////////////////////
-    qDebug() << "tmpdata.size = " << m_recvFrameData.size();
-    for(int i = 0 ; i < m_recvFrameData.size() ; i++)
-        qDebug("0x%2x" , m_recvFrameData.at(i));
-
+    if(m_recvFrameData.size() != 4)
+    {
+        qDebug() << "................................. recv frame data. times = " << m_errTimes++;
+        qDebug() << "tmpdata.size = " << m_recvFrameData.size();
+        for(int i = 0 ; i < m_recvFrameData.size() ; i++)
+            qDebug("0x%2x" , m_recvFrameData.at(i));
+    }
     /////////////////////////////////////////////////////////
     m_timeStamp++;
     m_recvFrameData.clear();
