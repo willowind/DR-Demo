@@ -31,7 +31,8 @@ SOURCES += \
     rawpeakfilter.cpp \
     rawsmoothfilter.cpp \
     extracttegparam.cpp \
-    rotarytest.cpp
+    rotarytest.cpp \
+    ringbuffer.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -41,7 +42,8 @@ HEADERS += \
     rawpeakfilter.h \
     rawsmoothfilter.h \
     extracttegparam.h \
-    rotarytest.h
+    rotarytest.h \
+    ringbuffer.h
 
 FORMS += \
         mainwindow.ui \

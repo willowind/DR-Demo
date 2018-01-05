@@ -5,13 +5,14 @@
 #include <QMultiMap>
 
 #include "spcom.h"
+#include "ringbuffer.h"
 
 struct AngleVoltageType
 {
     AngleVoltageType() : angle(0) , testVol(-1) , verifyVol(-1) ,  testVolXP(0) , testVolYP(0) , verifyVolXP(0) , verifyVolYP(0){}
 
 
-    AngleVoltageType & operator =(AngleVoltageType &other)
+    AngleVoltageType & operator =(const AngleVoltageType &other)
     {
          angle = other.angle;
          testVol = other.testVol;
@@ -26,9 +27,9 @@ struct AngleVoltageType
         return *this;
     }
 
-    float angle;
-    float testVol;
-    float verifyVol;
+    int angle;
+    int testVol;
+    int verifyVol;
 
     int testVolXP;
     int testVolYP;
@@ -63,13 +64,15 @@ private:
 
     SPCom *m_spcom;
 
-    float m_angleCurrTest;
-    float m_voltageCurrTest;
+    int m_angleCurrTest;
+    int m_voltageCurrTest;
 
-    QMultiMap<float , AngleVoltageType> m_angleVoltageMaps;
+    QMultiMap<int , AngleVoltageType> m_angleVoltageMaps;
 
     bool m_isTestAngleVoltage;
     bool m_isVerifyAngleVoltage;
+
+    RingBuffer *m_avRingBuffer;
 };
 
 #endif // ROTARYTEST_H
