@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     m_isBaseLineTest = false;
-    m_baseLineValue = 2047;
+    m_baseLineValue = 2085;
 
     m_rawPeakFilter = new RawPeakFilter();
     connect(m_rawPeakFilter , SIGNAL(SIGNALPeakFilterDataReady(QList<TEGRawData>)) , this , SLOT(slotPeakFilterDataReady(QList<TEGRawData>)));

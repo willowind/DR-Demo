@@ -77,13 +77,16 @@ RotaryTest::RotaryTest(QWidget *parent) :
     ui->voltageLcdNumber->setDigitCount(6);
 
     ui->angleLcdNumber->display(QString::number(m_angleCurrTest , 'f' , 3));
-    ui->voltageLcdNumber->display(QString::number(m_voltageCurrTest , 'f' , 3));
+    ui->voltageLcdNumber->display(QString::number(m_voltageCurrTest));
 
     //////////////////////////////////////////////////////////////////////////////////
     connect(ui->testPushButton , SIGNAL(toggled(bool)) , this , SLOT(slotTestPushButtonToggled(bool)));
     connect(ui->verifyPushButton , SIGNAL(toggled(bool)) , this , SLOT(slotVerifyPushButtonToggled(bool)));
     connect(ui->recordPushButton , SIGNAL(pressed()) , this , SLOT(slotRecordPushButtonPressed()));
     connect(ui->analysisPushButton , SIGNAL(pressed()) , this , SLOT(slotAnalysisPushButtonPressed()));
+    connect(ui->returnZeroPushButton , SIGNAL(pressed()) , this , SLOT(slotReturnZeroPushButtonPressed()));
+    connect(ui->increasePushButton , SIGNAL(pressed()) , this , SLOT(slotIncreasePushButtonPressed()));
+    connect(ui->decreasePushButton , SIGNAL(pressed()) , this , SLOT(slotDecreasePushButtonPressed()));
 
     //////////////////////////////////////////////////////////////////////////////////
     m_avRingBuffer = new RingBuffer();
@@ -96,10 +99,10 @@ RotaryTest::~RotaryTest()
 
 void RotaryTest::slotRecvSPComData(TEGRawData data)
 {
-    qDebug() << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << data.timestamp << "  " << data.data;
+//    qDebug() << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << data.timestamp << "  " << data.data;
 
     m_voltageCurrTest = data.data;
-    ui->voltageLcdNumber->display(QString::number(m_voltageCurrTest , 'f' , 3));
+    ui->voltageLcdNumber->display(QString::number(m_voltageCurrTest));
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //test
@@ -174,7 +177,7 @@ void RotaryTest::slotTestPushButtonToggled(bool toggled)
     /////////////////////////////////////////////////////////////////
     if(m_isTestAngleVoltage)
     {
-        ui->testPushButton->setText("停止测试");
+        ui->testPushButton->setText("测试");
 
         ui->verifyPushButton->setEnabled(false);
         ui->recordPushButton->setEnabled(false);
@@ -369,4 +372,19 @@ void RotaryTest::slotAnalysisPushButtonPressed()
 
     qDebug();
 
+}
+
+void RotaryTest::slotReturnZeroPushButtonPressed()
+{
+
+}
+
+void RotaryTest::slotIncreasePushButtonPressed()
+{
+    m_angleCurrTest += 1;
+}
+
+void RotaryTest::slotDecreasePushButtonPressed()
+{
+    m_angleCurrTest -= 1;
 }

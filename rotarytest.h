@@ -59,6 +59,10 @@ private slots:
     void slotRecordPushButtonPressed();
     void slotAnalysisPushButtonPressed();
 
+    void slotReturnZeroPushButtonPressed();
+    void slotIncreasePushButtonPressed();
+    void slotDecreasePushButtonPressed();
+
 private:
     Ui::RotaryTest *ui;
 

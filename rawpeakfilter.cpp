@@ -207,14 +207,14 @@ bool RawPeakFilter::findPeak(QList<TEGRawData> &rawDatas)
         findMaxPointToList(midRawData , maxDataList);
 
         // once filter
-        QList<TEGRawData> filterDataList = filterMaxPointInterField(maxDataList , m_thresholdScale);
-        TEGRawData filterData = medianFilterForMaxPoints(filterDataList);
+        //QList<TEGRawData> filterDataList = filterMaxPointInterField(maxDataList , m_thresholdScale);
+        //TEGRawData filterData = medianFilterForMaxPoints(filterDataList);
 
  //       TEGRawData peekData = medianFilterForMaxPoints(maxDataList);
 
-        if(filterData.channel != 0)
-            peekList.append(filterData);
-//        peekList.append(maxDataList);
+//        if(filterData.channel != 0)
+//            peekList.append(filterData);
+        peekList.append(maxDataList);
     }
 
     emit this->SIGNALPeakFilterDataReady(peekList);

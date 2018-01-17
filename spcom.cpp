@@ -23,14 +23,14 @@ SPCom::SPCom(QObject *parent):QObject(parent)
         qDebug() << "systemLocation: " << spInfo.systemLocation();
     }
 
-    m_serialPort = new QSerialPort("COM3");
+    m_serialPort = new QSerialPort("COM4");
 
     m_serialPort->setBaudRate(QSerialPort::Baud9600);
     m_serialPort->setDataBits(QSerialPort::Data8);
     m_serialPort->setFlowControl(QSerialPort::NoFlowControl);
     m_serialPort->setStopBits(QSerialPort::OneStop);
     m_serialPort->setParity(QSerialPort::NoParity);
-    m_serialPort->setReadBufferSize(1024);
+//    m_serialPort->setReadBufferSize(1024);
 
     if(!m_serialPort->open(QIODevice::ReadWrite))
     {
@@ -70,8 +70,9 @@ void SPCom::slotSPDataReadyRead()
 {
 //    qDebug("recv data throw SPCom...");
 
-//    while(m_serialPort->bytesAvailable() >= 4)
+//    while(m_serialPort->bytesAvailable() >= 1)
 //    {
+//        m_serialPort->waitForReadyRead(1);
 //        m_recvFrameData += m_serialPort->readAll();
 //    }
 
@@ -79,7 +80,7 @@ void SPCom::slotSPDataReadyRead()
         return;
 
     m_recvFrameData += m_serialPort->readAll();
-    m_serialPort->clear(QSerialPort::Input);
+    m_serialPort->clear();
 
     startBrokenFrameTimer();
 }
@@ -106,30 +107,35 @@ void SPCom::slotCollectSPDataOnece()
 
 void SPCom::slotBrokenFrameTimerTimeOut()
 {
-
 //    qDebug() << "................................. recv frame data............................";
 
     stopBrokenFrameTimer();
 
-//    TEGRawData rawData;
-//    rawData.channel = 1;
-//    rawData.timestamp = m_timeStamp;
-//    rawData.data = m_recvFrameData.toFloat();
-
-//    emit this->SignalDataRecv(rawData);
-
-
-
     /////////////////////////////////////////////////////////
-    if(m_recvFrameData.size() != 4)
+    if(m_recvFrameData.size() == 4)
+    {
+        ChannelData chData;
+
+        memcpy(&chData , m_recvFrameData.data() , sizeof(chData));
+
+        TEGRawData rawData;
+        rawData.channel = 1;
+        rawData.timestamp = m_timeStamp;
+        rawData.data = chData.chTwoData;
+
+        emit this->SignalDataRecv(rawData);
+
+        m_timeStamp++;
+    }
+    else
     {
         qDebug() << "................................. recv frame data. times = " << m_errTimes++;
         qDebug() << "tmpdata.size = " << m_recvFrameData.size();
         for(int i = 0 ; i < m_recvFrameData.size() ; i++)
             qDebug("0x%2x" , m_recvFrameData.at(i));
     }
+
     /////////////////////////////////////////////////////////
-    m_timeStamp++;
     m_recvFrameData.clear();
 }
 
