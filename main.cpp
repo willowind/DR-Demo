@@ -10,6 +10,7 @@ int main(int argc, char *argv[])
 
     qRegisterMetaType<TEGRawData>("TEGRawData");
     qRegisterMetaType<TEGRawData>("TEGRawData&");
+    qRegisterMetaType<RotaryProtocolType>("RotaryProtocolType");
 
 
     RotaryTest w;

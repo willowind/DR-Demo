@@ -38,9 +38,9 @@ struct ChannelData
     qint16 chTwoData;
 };
 
-#pragma pack(push)
+//#pragma pack(push)
 #pragma pack(1)
-enum RotaryControlType
+enum RotaryControlType : unsigned char
 {
     RCT_TurnStop = 0,
     RCT_TurnLeft = 1,
@@ -50,6 +50,16 @@ enum RotaryControlType
 struct RotaryHeaderType
 {
     RotaryHeaderType(quint8 f = 0x55 , quint8 s = 0xaa , quint8 t = 0x7e) : first(f) , secend(s) , third(t) {}
+
+    bool operator ==(const RotaryHeaderType &other)
+    {
+        if((other.first == first) && \
+                (other.secend == secend) && \
+                (other.third == third))
+            return true;
+
+        return false;
+    }
 
     quint8 first;
     quint8 secend;
@@ -66,8 +76,10 @@ struct RotaryProtocolType
     quint8 delayTime;
     quint16 totalRotaryStep;
 };
-#pragma pack(pop)
+#pragma pack()
+//#pragma pack(pop)
 
+Q_DECLARE_METATYPE(RotaryProtocolType);
 Q_DECLARE_METATYPE(TEGRawData);
 
 #endif // TEGRAWDATATYPE_H

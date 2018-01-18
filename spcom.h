@@ -9,15 +9,22 @@
 
 #include "tegrawdatatype.h"
 
+enum SPComMode
+{
+    SPM_ControlMode = 1,
+    SPM_CollectMode
+};
+
 class SPCom : public QObject
 {
     Q_OBJECT
 public:
-    explicit SPCom(QObject *parent = 0);
+    explicit SPCom(SPComMode mode , QString name , QObject *parent = 0);
     virtual ~SPCom();
 
 signals:
     void SignalDataRecv(TEGRawData data);
+    void SignalControlDataRecv(RotaryProtocolType data);
 
 public:
     qint64 WriteData(QByteArray &data);
@@ -50,6 +57,10 @@ private:
     QByteArray m_recvFrameData;
 
     int m_errTimes;
+
+    ////////////////////////////////////////////////////////////
+    SPComMode m_spcomMode;
+    int m_frameSize;
 };
 
 #endif // SPCOM_H

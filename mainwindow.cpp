@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_extractTegParam = new ExtractTegParam();
 
-    m_spcom = new SPCom();
+    m_spcom = new SPCom(SPM_CollectMode , QString("COM3"));
     connect(m_spcom , SIGNAL(SignalDataRecv(TEGRawData)) , this , SLOT(slotRecvSPComData(TEGRawData)));
 
     connect(ui->startPushButton , SIGNAL(pressed()) , this , SLOT(slotStartPushButtonClicked()));

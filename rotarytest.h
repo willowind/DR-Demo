@@ -54,6 +54,8 @@ public:
 
 private slots:
     void slotRecvSPComData(TEGRawData data);
+    void slotRecvSPComControlData(RotaryProtocolType data);
+
     void slotTestPushButtonToggled(bool toggled);
     void slotVerifyPushButtonToggled(bool toggled);
     void slotRecordPushButtonPressed();
@@ -64,9 +66,13 @@ private slots:
     void slotDecreasePushButtonPressed();
 
 private:
+    void autoTextNextAngleVoltage();
+
+private:
     Ui::RotaryTest *ui;
 
-    SPCom *m_spcom;
+    SPCom *m_spcomCollecter;
+    SPCom *m_spcomControl;
 
     int m_angleCurrTest;
     int m_voltageCurrTest;
@@ -77,6 +83,14 @@ private:
     bool m_isVerifyAngleVoltage;
 
     RingBuffer *m_avRingBuffer;
+
+    ////////////////////////////////////////////////////////////////////
+    RotaryProtocolType m_currRotaryProData;
+
+    bool m_isRightHalfTestFinished;
+    bool m_isleftHalfTestFinished;
+
+    bool m_isReturnZeroing;
 };
 
 #endif // ROTARYTEST_H

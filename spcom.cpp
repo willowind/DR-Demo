@@ -4,7 +4,7 @@
 #include <QSerialPortInfo>
 #include <QTime>
 
-SPCom::SPCom(QObject *parent):QObject(parent)
+SPCom::SPCom(SPComMode mode, QString name, QObject *parent) : m_spcomMode(mode) , QObject(parent)
 {
     QList<QSerialPortInfo> spInfoList = QSerialPortInfo::availablePorts();
     QListIterator<QSerialPortInfo> i(spInfoList);
@@ -23,7 +23,7 @@ SPCom::SPCom(QObject *parent):QObject(parent)
         qDebug() << "systemLocation: " << spInfo.systemLocation();
     }
 
-    m_serialPort = new QSerialPort("COM4");
+    m_serialPort = new QSerialPort(name);
 
     m_serialPort->setBaudRate(QSerialPort::Baud9600);
     m_serialPort->setDataBits(QSerialPort::Data8);
@@ -59,6 +59,12 @@ SPCom::SPCom(QObject *parent):QObject(parent)
     qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
 
     /////////////////////////////////////////////////////////////////////
+    if(m_spcomMode == SPM_CollectMode)
+        m_frameSize = sizeof(ChannelData);
+    else if(m_spcomMode == SPM_ControlMode)
+        m_frameSize = sizeof(SPComMode);
+
+    qDebug() << "serial port m_frameSize = " << m_frameSize;
 }
 
 void SPCom::OpenSerialPort(QString &spName)
@@ -76,7 +82,7 @@ void SPCom::slotSPDataReadyRead()
 //        m_recvFrameData += m_serialPort->readAll();
 //    }
 
-    if(m_serialPort->bytesAvailable() < 4)
+    if(m_serialPort->bytesAvailable() < m_frameSize)
         return;
 
     m_recvFrameData += m_serialPort->readAll();
@@ -112,20 +118,31 @@ void SPCom::slotBrokenFrameTimerTimeOut()
     stopBrokenFrameTimer();
 
     /////////////////////////////////////////////////////////
-    if(m_recvFrameData.size() == 4)
+    if(m_recvFrameData.size() == m_frameSize)
     {
-        ChannelData chData;
+        if(m_spcomMode == SPM_CollectMode)
+        {
+            ChannelData chData;
+            TEGRawData rawData;
 
-        memcpy(&chData , m_recvFrameData.data() , sizeof(chData));
+            memcpy(&chData , m_recvFrameData.data() , sizeof(chData));
 
-        TEGRawData rawData;
-        rawData.channel = 1;
-        rawData.timestamp = m_timeStamp;
-        rawData.data = chData.chTwoData;
+            rawData.channel = 1;
+            rawData.timestamp = m_timeStamp;
+            rawData.data = chData.chTwoData;
 
-        emit this->SignalDataRecv(rawData);
+            emit this->SignalDataRecv(rawData);
 
-        m_timeStamp++;
+            m_timeStamp++;
+        }
+        else if(m_spcomMode == SPM_ControlMode)
+        {
+            RotaryProtocolType rotaryData;
+            memcpy(&rotaryData , m_recvFrameData.data() , sizeof(rotaryData));
+
+            if(rotaryData.header == RotaryHeaderType())
+                emit this->SignalControlDataRecv(rotaryData);
+        }
     }
     else
     {
