@@ -62,7 +62,7 @@ SPCom::SPCom(SPComMode mode, QString name, QObject *parent) : m_spcomMode(mode) 
     if(m_spcomMode == SPM_CollectMode)
         m_frameSize = sizeof(ChannelData);
     else if(m_spcomMode == SPM_ControlMode)
-        m_frameSize = sizeof(SPComMode);
+        m_frameSize = sizeof(RotaryProtocolType);
 
     qDebug() << "serial port m_frameSize = " << m_frameSize;
 }
@@ -140,7 +140,7 @@ void SPCom::slotBrokenFrameTimerTimeOut()
             RotaryProtocolType rotaryData;
             memcpy(&rotaryData , m_recvFrameData.data() , sizeof(rotaryData));
 
-            if(rotaryData.header == RotaryHeaderType())
+//            if(rotaryData.header == RotaryHeaderType())
                 emit this->SignalControlDataRecv(rotaryData);
         }
     }

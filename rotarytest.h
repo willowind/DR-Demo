@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QMultiMap>
+#include <QTimer>
 
 #include "spcom.h"
 #include "ringbuffer.h"
@@ -65,8 +66,13 @@ private slots:
     void slotIncreasePushButtonPressed();
     void slotDecreasePushButtonPressed();
 
+    void slotOverTimerTimeOut();
+
 private:
     void autoTextNextAngleVoltage();
+
+    void startOverTimer();
+    void stopOverTimer();
 
 private:
     Ui::RotaryTest *ui;
@@ -83,6 +89,8 @@ private:
     bool m_isVerifyAngleVoltage;
 
     RingBuffer *m_avRingBuffer;
+    RingBuffer *m_avFirstFilterRingBuffer;
+    RingBuffer *m_avSecendFilterRingBuffer;
 
     ////////////////////////////////////////////////////////////////////
     RotaryProtocolType m_currRotaryProData;
@@ -91,6 +99,9 @@ private:
     bool m_isleftHalfTestFinished;
 
     bool m_isReturnZeroing;
+
+    //////////////////////////////////////////////////////////////////////
+    QTimer *m_overTimer;
 };
 
 #endif // ROTARYTEST_H

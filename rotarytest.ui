@@ -202,7 +202,7 @@
                <string>归零</string>
               </property>
               <property name="checkable">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -226,7 +226,7 @@
                <string>正＋</string>
               </property>
               <property name="checkable">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -250,7 +250,7 @@
                <string>逆－</string>
               </property>
               <property name="checkable">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
