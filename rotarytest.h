@@ -80,6 +80,7 @@ private:
     SPCom *m_spcomCollecter;
     SPCom *m_spcomControl;
 
+    int m_moveTotleSteps;
     int m_angleCurrTest;
     int m_voltageCurrTest;
 

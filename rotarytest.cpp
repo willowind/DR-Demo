@@ -12,10 +12,13 @@
 #define RIGHT_BORDER_MAX (237)
 #define LEFT_BORDER_MAX (-237)
 
-#define STEP_MONITOR_ANGLE_STEP (180.0) //放大100倍，精确到0.01
+#define STEP_MONITOR_ANGLE_STEP (1.8)
 #define REDUCTION_RATE (60.0)
 #define MONITOR_DRIVER_SUBDIVIDE (128.0)
-#define ROTARY_STEPS_PRE_ANGLE ((REDUCTION_RATE * MONITOR_DRIVER_SUBDIVIDE) / STEP_MONITOR_ANGLE_STEP)
+#define ROTARY_STEPS_PRE_ANGLE ((REDUCTION_RATE * MONITOR_DRIVER_SUBDIVIDE) / (STEP_MONITOR_ANGLE_STEP *100))
+
+#define ROTARY_STEPS_PRE_ONCE   (50)
+#define ROTARY_ANGEL_PRE_STEP (STEP_MONITOR_ANGLE_STEP / (REDUCTION_RATE * MONITOR_DRIVER_SUBDIVIDE))
 
 RotaryTest::RotaryTest(QWidget *parent) :
     QWidget(parent),
@@ -24,6 +27,7 @@ RotaryTest::RotaryTest(QWidget *parent) :
     ui->setupUi(this);
 
     //////////////////////////////////////////////////////////////////////////////////
+    m_moveTotleSteps = 0;
     m_angleCurrTest = 0;
     m_voltageCurrTest = 0;
 
@@ -38,7 +42,7 @@ RotaryTest::RotaryTest(QWidget *parent) :
 //    m_spcomCollecter = new SPCom(SPM_CollectMode , QString("COM5"));
 //    connect(m_spcomCollecter , SIGNAL(SignalDataRecv(TEGRawData)) , this , SLOT(slotRecvSPComData(TEGRawData)));
 
-    m_spcomControl = new SPCom(SPM_ControlMode , QString("COM4"));
+    m_spcomControl = new SPCom(SPM_ControlMode , QString("COM5"));
     connect(m_spcomControl , SIGNAL(SignalControlDataRecv(RotaryProtocolType)) , this , SLOT(slotRecvSPComControlData(RotaryProtocolType)));
 
     /////////////////////////////////////////////////////////////////////////////////
@@ -175,8 +179,11 @@ void RotaryTest::slotRecvSPComData(TEGRawData data)
 
         ///////////////////////////////////////////////////////////////////////////////
         AngleVoltageType avItem = m_angleVoltageMaps.value(m_angleCurrTest);
-        avItem.testVol = bufferData;
-        m_angleVoltageMaps.replace(m_angleCurrTest , avItem);
+        if(avItem.testVol == -1)
+        {
+            avItem.testVol = bufferData;
+            m_angleVoltageMaps.replace(m_angleCurrTest , avItem);
+        }
 
         //////////////////////////////////////////////////////////////////////////////
         QString str = QString("%1").arg(QString::number(bufferData));
@@ -203,8 +210,11 @@ void RotaryTest::slotRecvSPComData(TEGRawData data)
 
             ///////////////////////////////////////////////////////////////////////////////
             AngleVoltageType avItem = m_angleVoltageMaps.value(m_angleCurrTest);
-            avItem.verifyVol = bufferData;
-            m_angleVoltageMaps.replace(m_angleCurrTest , avItem);
+            if(avItem.verifyVol == -1)
+            {
+                avItem.verifyVol = bufferData;
+                m_angleVoltageMaps.replace(m_angleCurrTest , avItem);
+            }
 
             //////////////////////////////////////////////////////////////////////////////
             QString str = QString("%1").arg(QString::number(bufferData));
@@ -241,16 +251,20 @@ void RotaryTest::slotRecvSPComControlData(RotaryProtocolType data)
             {
                 m_isReturnZeroing = false;
                 m_angleCurrTest = 0;
+                m_moveTotleSteps = 0;
 
                 autoTextNextAngleVoltage();
             }
         }
         else
         {
-            if(m_angleCurrTest > 0)
-                m_angleCurrTest--;
-            else
-                m_angleCurrTest++;
+            if((data.totalRotaryStep % ROTARY_STEPS_PRE_ONCE) == 0)
+            {
+                if(m_angleCurrTest > 0)
+                    m_angleCurrTest -= 1;
+                else
+                    m_angleCurrTest += 1;
+            }
         }
 
         ui->angleLcdNumber->display(QString::number(m_angleCurrTest/100.0 , 'f' , 2));
@@ -523,7 +537,9 @@ void RotaryTest::slotReturnZeroPushButtonPressed()
         rotaryProData.control = RCT_TurnRight;
 
     rotaryProData.delayTime = 10;
-    rotaryProData.rotaryStep = (qAbs(m_angleCurrTest) * ROTARY_STEPS_PRE_ANGLE) + 0.5;
+//    rotaryProData.rotaryStep = (qAbs(m_angleCurrTest) * ROTARY_STEPS_PRE_ANGLE) + 0.5;
+    rotaryProData.rotaryStep = (qAbs(m_moveTotleSteps));
+
 
     m_spcomControl->WriteData((char *)(&rotaryProData) , sizeof(rotaryProData));
 
@@ -545,12 +561,14 @@ void RotaryTest::slotIncreasePushButtonPressed()
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    m_angleCurrTest += 1;
+    m_angleCurrTest += ((ROTARY_ANGEL_PRE_STEP * ROTARY_STEPS_PRE_ONCE * 100) + 0.5);
+    m_moveTotleSteps += ROTARY_STEPS_PRE_ONCE;
 
     RotaryProtocolType rotaryProData;
 
     rotaryProData.control = RCT_TurnRight;
-    rotaryProData.rotaryStep = ROTARY_STEPS_PRE_ANGLE + 0.5;
+//    rotaryProData.rotaryStep = ROTARY_STEPS_PRE_ANGLE + 0.5;
+    rotaryProData.rotaryStep = ROTARY_STEPS_PRE_ONCE;
 
     m_spcomControl->WriteData((char *)(&rotaryProData) , sizeof(rotaryProData));
 
@@ -574,12 +592,15 @@ void RotaryTest::slotDecreasePushButtonPressed()
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    m_angleCurrTest -= 1;
+    int t = (ROTARY_ANGEL_PRE_STEP * ROTARY_STEPS_PRE_ONCE * 100) + 0.5;
+    m_angleCurrTest -= t;
+    m_moveTotleSteps -= ROTARY_STEPS_PRE_ONCE;
 
     RotaryProtocolType rotaryProData;
 
     rotaryProData.control = RCT_TurnLeft;
-    rotaryProData.rotaryStep = ROTARY_STEPS_PRE_ANGLE + 0.5;
+//    rotaryProData.rotaryStep = ROTARY_STEPS_PRE_ANGLE + 0.5;
+    rotaryProData.rotaryStep = ROTARY_STEPS_PRE_ONCE;
 
     m_spcomControl->WriteData((char *)(&rotaryProData) , sizeof(rotaryProData));
 
@@ -608,7 +629,8 @@ void RotaryTest::autoTextNextAngleVoltage()
     //right
     if(!m_isRightHalfTestFinished)
     {
-        m_angleCurrTest += 1;
+        m_moveTotleSteps += ROTARY_STEPS_PRE_ONCE;
+        m_angleCurrTest += ((ROTARY_ANGEL_PRE_STEP * ROTARY_STEPS_PRE_ONCE * 100) + 0.5);
         if(m_angleCurrTest > RIGHT_BORDER_MAX)
         {
             m_isRightHalfTestFinished = true;
@@ -618,13 +640,15 @@ void RotaryTest::autoTextNextAngleVoltage()
             ///////////////////////////////////////////////////
             // return origen point
             rotaryProData.control = RCT_TurnLeft;
-            rotaryProData.rotaryStep  = (m_angleCurrTest * ROTARY_STEPS_PRE_ANGLE) + 0.5;
+//            rotaryProData.rotaryStep  = (m_angleCurrTest * ROTARY_STEPS_PRE_ANGLE) + 0.5;
+            rotaryProData.rotaryStep  = m_moveTotleSteps;
             rotaryProData.delayTime = 10;
         }
         else
         {
             rotaryProData.control = RCT_TurnRight;
-            rotaryProData.rotaryStep  = ROTARY_STEPS_PRE_ANGLE + 0.5;
+//            rotaryProData.rotaryStep  = ROTARY_STEPS_PRE_ANGLE + 0.5;
+            rotaryProData.rotaryStep = ROTARY_STEPS_PRE_ONCE;
         }
 
         m_spcomControl->WriteData((char *)(&rotaryProData) , sizeof(rotaryProData));
@@ -638,7 +662,10 @@ void RotaryTest::autoTextNextAngleVoltage()
     //left
     if(!m_isleftHalfTestFinished)
     {
-        m_angleCurrTest -= 1;
+        m_moveTotleSteps -= ROTARY_STEPS_PRE_ONCE;
+
+        int t = (ROTARY_ANGEL_PRE_STEP * ROTARY_STEPS_PRE_ONCE * 100) + 0.5;
+        m_angleCurrTest -= t;
         if(m_angleCurrTest < LEFT_BORDER_MAX)
         {
             m_isleftHalfTestFinished = true;
@@ -648,13 +675,15 @@ void RotaryTest::autoTextNextAngleVoltage()
             ///////////////////////////////////////////////////
             // return origen point
             rotaryProData.control = RCT_TurnRight;
-            rotaryProData.rotaryStep  = (qAbs(m_angleCurrTest) * ROTARY_STEPS_PRE_ANGLE) + 0.5;
+//            rotaryProData.rotaryStep  = (qAbs(m_angleCurrTest) * ROTARY_STEPS_PRE_ANGLE) + 0.5;
+            rotaryProData.rotaryStep  = (qAbs(m_moveTotleSteps));
             rotaryProData.delayTime = 10;
         }
         else
         {
             rotaryProData.control = RCT_TurnLeft;
-            rotaryProData.rotaryStep  = ROTARY_STEPS_PRE_ANGLE + 0.5;
+//            rotaryProData.rotaryStep  = ROTARY_STEPS_PRE_ANGLE + 0.5;
+            rotaryProData.rotaryStep = ROTARY_STEPS_PRE_ONCE;
         }
 
         m_spcomControl->WriteData((char *)(&rotaryProData) , sizeof(rotaryProData));
