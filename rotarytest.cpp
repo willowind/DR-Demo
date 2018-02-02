@@ -9,16 +9,18 @@
 #include <QFileDialog>
 
 
-#define RIGHT_BORDER_MAX (237)
-#define LEFT_BORDER_MAX (-237)
+#define RIGHT_BORDER_MAX (475)
+#define LEFT_BORDER_MAX (0)
 
 #define STEP_MONITOR_ANGLE_STEP (1.8)
 #define REDUCTION_RATE (60.0)
-#define MONITOR_DRIVER_SUBDIVIDE (128.0)
+#define MONITOR_DRIVER_SUBDIVIDE (64.0)
 #define ROTARY_STEPS_PRE_ANGLE ((REDUCTION_RATE * MONITOR_DRIVER_SUBDIVIDE) / (STEP_MONITOR_ANGLE_STEP *100))
 
-#define ROTARY_STEPS_PRE_ONCE   (50)
+#define ROTARY_STEPS_PRE_ONCE   (22)
 #define ROTARY_ANGEL_PRE_STEP (STEP_MONITOR_ANGLE_STEP / (REDUCTION_RATE * MONITOR_DRIVER_SUBDIVIDE))
+
+#define TEST_START_ANGLE (0)
 
 RotaryTest::RotaryTest(QWidget *parent) :
     QWidget(parent),
@@ -28,7 +30,7 @@ RotaryTest::RotaryTest(QWidget *parent) :
 
     //////////////////////////////////////////////////////////////////////////////////
     m_moveTotleSteps = 0;
-    m_angleCurrTest = 0;
+    m_angleCurrTest = TEST_START_ANGLE;
     m_voltageCurrTest = 0;
 
     m_isTestAngleVoltage = false;
@@ -39,10 +41,10 @@ RotaryTest::RotaryTest(QWidget *parent) :
     m_isReturnZeroing = false;
 
     //////////////////////////////////////////////////////////////////////////////////
-//    m_spcomCollecter = new SPCom(SPM_CollectMode , QString("COM5"));
-//    connect(m_spcomCollecter , SIGNAL(SignalDataRecv(TEGRawData)) , this , SLOT(slotRecvSPComData(TEGRawData)));
+    m_spcomCollecter = new SPCom(SPM_CollectMode , QString("COM5"));
+    connect(m_spcomCollecter , SIGNAL(SignalDataRecv(TEGRawData)) , this , SLOT(slotRecvSPComData(TEGRawData)));
 
-    m_spcomControl = new SPCom(SPM_ControlMode , QString("COM5"));
+    m_spcomControl = new SPCom(SPM_ControlMode , QString("COM3"));
     connect(m_spcomControl , SIGNAL(SignalControlDataRecv(RotaryProtocolType)) , this , SLOT(slotRecvSPComControlData(RotaryProtocolType)));
 
     /////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +62,7 @@ RotaryTest::RotaryTest(QWidget *parent) :
 
     ui->tableWidget->setVerticalHeaderLabels(hheaders);
 
-    int displayValue = -237;
+    int displayValue = 0;
     for(int row = 0 ; row < 42 ;)
     {
         for(int column = 0 ; column < 36 ; column++)
@@ -76,8 +78,6 @@ RotaryTest::RotaryTest(QWidget *parent) :
             ui->tableWidget->setColumnWidth(column , 50);
             ui->tableWidget->setItem(row , column , item);
 
-            displayValue += 1;
-
             ///////////////////////////////////////////////////////////////
             AngleVoltageType av;
             av.angle = displayValue;
@@ -87,6 +87,9 @@ RotaryTest::RotaryTest(QWidget *parent) :
             av.verifyVolYP = column;
 
             m_angleVoltageMaps.insert(displayValue , av);
+
+            ///////////////////////////////////////////////////////////////
+            displayValue += 1;
         }
 
         row += 3;
@@ -121,6 +124,9 @@ RotaryTest::RotaryTest(QWidget *parent) :
     m_overTimer = new QTimer(this);
     m_overTimer->setInterval(1000);
 
+    m_returnZeroOverTimer = new QTimer(this);
+    m_returnZeroOverTimer->setInterval(60*1000);
+
     RotaryProtocolType rotary;
     qDebug() << "sizeof(rotary.header) = " << sizeof(rotary.header);
     qDebug() << "sizeof(rotary.control) = " << sizeof(rotary.control);
@@ -140,7 +146,7 @@ void RotaryTest::slotRecvSPComData(TEGRawData data)
 //    qDebug() << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << data.timestamp << "  " << data.data;
 
     m_voltageCurrTest = data.data;
-//    ui->voltageLcdNumber->display(QString::number(m_voltageCurrTest));
+    ui->voltageLcdNumber->display(QString::number(m_voltageCurrTest));
 
     if(m_isReturnZeroing)
         return;
@@ -150,27 +156,28 @@ void RotaryTest::slotRecvSPComData(TEGRawData data)
     if(m_isTestAngleVoltage)
     {
         // first filter ring buffer
-        m_avFirstFilterRingBuffer->PushDataToBuffer(data.data);
-        if(!m_avFirstFilterRingBuffer->IsBufferDataEqual())
-            return;
+//        m_avFirstFilterRingBuffer->PushDataToBuffer(data.data);
+//        if(!m_avFirstFilterRingBuffer->IsBufferDataEqual())
+//            return;
 
-        int firstFilterData = m_avFirstFilterRingBuffer->GetBufferAverageData();
-        m_avFirstFilterRingBuffer->Clear();
+//        int firstFilterData = m_avFirstFilterRingBuffer->GetBufferAverageData();
+//        m_avFirstFilterRingBuffer->Clear();
 
-        ui->voltageLcdNumber->display(QString::number(firstFilterData));
+//        ui->voltageLcdNumber->display(QString::number(firstFilterData));
 
-        ///////////////////////////////////////////////////////////////////////////////////
-        // secend filter ring buffer
-        m_avSecendFilterRingBuffer->PushDataToBuffer(firstFilterData);
-        if(!m_avSecendFilterRingBuffer->IsBufferDataEqual())
-            return;
+//        ///////////////////////////////////////////////////////////////////////////////////
+//        // secend filter ring buffer
+//        m_avSecendFilterRingBuffer->PushDataToBuffer(firstFilterData);
+//        if(!m_avSecendFilterRingBuffer->IsBufferDataEqual())
+//            return;
 
-        int secendFilterData = m_avSecendFilterRingBuffer->GetBufferAverageData();
-        m_avSecendFilterRingBuffer->Clear();
+//        int secendFilterData = m_avSecendFilterRingBuffer->GetBufferAverageData();
+//        m_avSecendFilterRingBuffer->Clear();
 
         ///////////////////////////////////////////////////////////////////////////////////
         // third filter ring buffer
-        m_avRingBuffer->PushDataToBuffer(secendFilterData);
+//        m_avRingBuffer->PushDataToBuffer(secendFilterData);
+        m_avRingBuffer->PushDataToBuffer(data.data);
         if(!m_avRingBuffer->IsBufferDataEqual())
             return;
 
@@ -245,12 +252,12 @@ void RotaryTest::slotRecvSPComControlData(RotaryProtocolType data)
     /////////////////////////////////////////////////////////////////////////////////////
     if(m_isReturnZeroing)
     {
-        if(m_angleCurrTest == 0)
+        if(m_angleCurrTest == TEST_START_ANGLE)
         {
             if(data.rotaryStep == data.totalRotaryStep)
             {
                 m_isReturnZeroing = false;
-                m_angleCurrTest = 0;
+                m_angleCurrTest = TEST_START_ANGLE;
                 m_moveTotleSteps = 0;
 
                 autoTextNextAngleVoltage();
@@ -260,7 +267,7 @@ void RotaryTest::slotRecvSPComControlData(RotaryProtocolType data)
         {
             if((data.totalRotaryStep % ROTARY_STEPS_PRE_ONCE) == 0)
             {
-                if(m_angleCurrTest > 0)
+                if(m_angleCurrTest > TEST_START_ANGLE)
                     m_angleCurrTest -= 1;
                 else
                     m_angleCurrTest += 1;
@@ -382,7 +389,8 @@ void RotaryTest::slotRecordPushButtonPressed()
         i.next();
 
         AngleVoltageType av = i.value();
-        out << av.angle << " " << av.testVol << " " << av.verifyVol << '\n';
+//        out << av.angle << " " << av.testVol << " " << av.verifyVol << '\n';
+        out << av.testVol << '\n';
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -531,7 +539,7 @@ void RotaryTest::slotReturnZeroPushButtonPressed()
     //////////////////////////////////////////////////////////////////////////////////
     RotaryProtocolType rotaryProData;
 
-    if(m_angleCurrTest > 0)
+    if(m_angleCurrTest > TEST_START_ANGLE)
         rotaryProData.control = RCT_TurnLeft;
     else
         rotaryProData.control = RCT_TurnRight;
@@ -561,7 +569,8 @@ void RotaryTest::slotIncreasePushButtonPressed()
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    m_angleCurrTest += ((ROTARY_ANGEL_PRE_STEP * ROTARY_STEPS_PRE_ONCE * 100) + 0.5);
+    int t = ((ROTARY_ANGEL_PRE_STEP * ROTARY_STEPS_PRE_ONCE * 100) + 0.5);
+    m_angleCurrTest += t;
     m_moveTotleSteps += ROTARY_STEPS_PRE_ONCE;
 
     RotaryProtocolType rotaryProData;
@@ -621,6 +630,18 @@ void RotaryTest::slotOverTimerTimeOut()
     ui->returnZeroPushButton->setEnabled(true);
 }
 
+void RotaryTest::slotReturnZeroOverTimerTimeOut()
+{
+    if(m_isReturnZeroing)
+    {
+        m_isReturnZeroing = false;
+        m_angleCurrTest = TEST_START_ANGLE;
+        m_moveTotleSteps = 0;
+
+        autoTextNextAngleVoltage();
+    }
+}
+
 void RotaryTest::autoTextNextAngleVoltage()
 {
     RotaryProtocolType rotaryProData;
@@ -630,7 +651,8 @@ void RotaryTest::autoTextNextAngleVoltage()
     if(!m_isRightHalfTestFinished)
     {
         m_moveTotleSteps += ROTARY_STEPS_PRE_ONCE;
-        m_angleCurrTest += ((ROTARY_ANGEL_PRE_STEP * ROTARY_STEPS_PRE_ONCE * 100) + 0.5);
+        int t = ((ROTARY_ANGEL_PRE_STEP * ROTARY_STEPS_PRE_ONCE * 100) + 0.5);
+        m_angleCurrTest += t;
         if(m_angleCurrTest > RIGHT_BORDER_MAX)
         {
             m_isRightHalfTestFinished = true;
@@ -716,5 +738,23 @@ void RotaryTest::stopOverTimer()
     {
         disconnect(m_overTimer , SIGNAL(timeout()) , this , SLOT(slotOverTimerTimeOut()));
         m_overTimer->stop();
+    }
+}
+
+void RotaryTest::startReturnZeroOverTimer()
+{
+    if(m_returnZeroOverTimer)
+    {
+        connect(m_returnZeroOverTimer , SIGNAL(timeout()) , this , SLOT(slotReturnZeroOverTimerTimeOut()) , Qt::UniqueConnection);
+        m_returnZeroOverTimer->start();
+    }
+}
+
+void RotaryTest::stopReturnZeroOverTimer()
+{
+    if(m_returnZeroOverTimer)
+    {
+        disconnect(m_returnZeroOverTimer , SIGNAL(timeout()) , this , SLOT(slotReturnZeroOverTimerTimeOut()));
+        m_returnZeroOverTimer->stop();
     }
 }

@@ -42,7 +42,7 @@ bool RingBuffer::IsBufferDataEqual()
         qDebug("TTTTTTTTTTTTTTT max - min , %d - %d = %d" , max , min , max-min);
 
     ///////////////////////////////////////////////////
-    if((max - min) < m_filterValue)
+    if((max - min) <= m_filterValue)
         return true;
     else
         return false;

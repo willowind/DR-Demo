@@ -67,12 +67,16 @@ private slots:
     void slotDecreasePushButtonPressed();
 
     void slotOverTimerTimeOut();
+    void slotReturnZeroOverTimerTimeOut();
 
 private:
     void autoTextNextAngleVoltage();
 
     void startOverTimer();
     void stopOverTimer();
+
+    void startReturnZeroOverTimer();
+    void stopReturnZeroOverTimer();
 
 private:
     Ui::RotaryTest *ui;
@@ -103,6 +107,7 @@ private:
 
     //////////////////////////////////////////////////////////////////////
     QTimer *m_overTimer;
+    QTimer *m_returnZeroOverTimer;
 };
 
 #endif // ROTARYTEST_H

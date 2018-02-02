@@ -1,7 +1,7 @@
 #ifndef RINGBUFFER_H
 #define RINGBUFFER_H
 
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 20
 
 class RingBuffer
 {

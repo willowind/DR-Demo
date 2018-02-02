@@ -222,7 +222,7 @@ float ExtractTegParam::ExtractAngleValue()
 
     //float tan = diffvvy / diffttx;
     float piAngle = atan2(diffvvy , diffttx);
-    float angle = (piAngle * 180) / 3.14159;
+    float angle = 90 - (piAngle * 180) / 3.14159;
 
     qDebug() << "piangle = " << piAngle;
     qDebug() << "angle = " << angle;
